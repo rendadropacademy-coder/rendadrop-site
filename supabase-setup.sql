@@ -1,5 +1,6 @@
 -- RendaDrop Academy — Supabase Schema
 -- Execute this in the Supabase SQL Editor
+-- Safe to run multiple times (drop if exists before recreating)
 
 -- 1. PROFILES TABLE
 create table if not exists public.profiles (
@@ -12,10 +13,14 @@ create table if not exists public.profiles (
   updated_at timestamptz default now()
 );
 
--- Enable RLS
 alter table public.profiles enable row level security;
 
--- Policies: users can read and update their own profile
+-- Drop policies before recreating (safe to run again)
+drop policy if exists "Users can view own profile" on public.profiles;
+drop policy if exists "Users can update own profile" on public.profiles;
+drop policy if exists "Admins can view all profiles" on public.profiles;
+drop policy if exists "Admins can update all profiles" on public.profiles;
+
 create policy "Users can view own profile"
   on public.profiles for select
   using (auth.uid() = id);
@@ -24,7 +29,6 @@ create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
 
--- Admins can view all profiles
 create policy "Admins can view all profiles"
   on public.profiles for select
   using (
@@ -34,7 +38,6 @@ create policy "Admins can view all profiles"
     )
   );
 
--- Admins can update all profiles
 create policy "Admins can update all profiles"
   on public.profiles for update
   using (
@@ -54,6 +57,8 @@ create table if not exists public.lesson_progress (
 );
 
 alter table public.lesson_progress enable row level security;
+
+drop policy if exists "Users can manage own progress" on public.lesson_progress;
 
 create policy "Users can manage own progress"
   on public.lesson_progress for all
@@ -76,7 +81,6 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Drop trigger if exists and recreate
 drop trigger if exists on_auth_user_created on auth.users;
 
 create trigger on_auth_user_created
