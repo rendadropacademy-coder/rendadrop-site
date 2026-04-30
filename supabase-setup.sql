@@ -57,7 +57,8 @@ alter table public.lesson_progress enable row level security;
 
 create policy "Users can manage own progress"
   on public.lesson_progress for all
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- 3. TRIGGER: auto-create profile on signup
 create or replace function public.handle_new_user()
@@ -97,7 +98,11 @@ create trigger update_profiles_updated_at
   before update on public.profiles
   for each row execute procedure public.update_updated_at();
 
--- 5. SET ADMIN USER (run after creating your account)
--- Replace 'rendadropacademy@gmail.com' with your actual email after registering
--- update public.profiles set role = 'admin', credits = 9999
+-- ============================================================
+-- PASSO 5 — EXECUTAR DEPOIS QUE CRIAR SUA CONTA NO SITE
+-- Abra o SQL Editor novamente e execute APENAS este bloco:
+-- ============================================================
+
+-- update public.profiles
+-- set role = 'admin', credits = 9999
 -- where email = 'rendadropacademy@gmail.com';
